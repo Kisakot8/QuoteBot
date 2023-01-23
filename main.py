@@ -177,15 +177,6 @@ async def get_count(guild_id: int, text: str = None, has_image: bool = None, aut
     return quote_count[0]['count']
 
 
-async def get_true_id(id: int, guild_id: int) -> int:
-    async with bot.pool.acquire() as con:
-        id_to_true_id = await con.fetch(f'''
-        SELECT ROW_NUMBER() OVER() AS id, true_id FROM quotes_{guild_id};
-        ''')
-    id_to_true_id = {record[0]:record[1] for record in id_to_true_id}
-    return id_to_true_id[id]
-
-
 async def get_page_quotes(guild_id: int, page: int, text: str = None, has_image: bool = None, authorid: int = None) -> list:
     bool_to_null = {True: 'NOT NULL', False: 'NULL'}
     offset = (page-1)*10
@@ -490,7 +481,7 @@ bot.tree.add_command(save_group)
 
 
 @bot.tree.command(name = 'list', description='Lists quotes from the Quote Book, 10 per page.')
-async def list_quotes(interaction: discord.Interaction, page: int):
+async def list_quotes(interaction: discord.Interaction, page: int = 1):
     '''Lists quotes from the Quote Book, 10 per page.'''
     try:
         quote_count = await get_count(interaction.guild_id)
@@ -719,8 +710,7 @@ __**THIS CANNOT BE UNDONE!**__
 
 # The following command is made for the explicit purpose of transferring quotes from the
 # quotes channel in my private friend server (as that is where all quotes have been saved up)
-# until now. I may allow this command for future access, but for now I believe it is an easy
-# way for people to spam requests to perform a DDoS attack (if I ever publicise the bot).
+# until now. I may allow this command for future access.
 @bot.command()
 @commands.is_owner()
 async def mass_save(ctx, channel: discord.TextChannel):
